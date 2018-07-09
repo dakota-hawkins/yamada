@@ -1,5 +1,7 @@
 import networkx as nx
+from collections import OrderedDict
 import numpy as np
+from matplotlib import pyplot as plt
 
 example = {1: {2: {'weight': 2},
                3: {'weight': 1}},
@@ -60,10 +62,36 @@ class yamada(object):
         r_idx = np.random.randint(0, high=self.graph.number_of_nodes())
         return(self.graph.nodes[r_idx])
 
+    def postorder_tree(self, tree):
+        source_node = self.random_nodes()
+        directed = tree.to_directed()
+        postorder_dict = OrderedDict()
+        for i, node in enumerate(nx.dfs_postorder_nodes(directed, source_node)):
+            postorder_dict[node] = i
+            # remove edges not already logged in dictionary --> higher postorder
+            parent_nodes = []
+            for neighbor in nx.neighbors(directed, node):
+                if neighbor not in postorder_dict:
+                    parent_nodes.append((node, neighbor))
+            directed.remove_edges_from(parent_nodes)
+
+        descendant_dict = {}
+        for each in postorder_dict:
+            descendant_dict[each] = []
+            for child in nx.descendants(directed, each):
+                descendant_dict[each].append(postorder_dict[child])
+            descendant_dict[each].sort()
+        return(postorder_dict, descendant_dict)
+
+
+
     def substitute(self, tree, fixed_edges, restricted_edges):
         """
         Find the substitute-set for a given edge in an minimal-spanning tree.
         """
+
+
+        
 
         return(None)
     
