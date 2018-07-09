@@ -156,6 +156,7 @@ class Yamada(object):
 
         # map nodes to their postorder position
         for i, node in enumerate(nx.dfs_postorder_nodes(directed, source_node)):
+        # for i, node in enumerate(list(self.graph.nodes())):
             postorder_dict[node] = i
             # remove directed edges not already logged in dictionary
             # --> higher postorder, won't be descendant
@@ -210,8 +211,8 @@ class Yamada(object):
         """
         substitute_dict = dict()
         for e in tree.edges:
-            substitute_dict[e] = None
-            substitute_dict[e[::-1]]= None
+            substitute_dict[e] = []
+            substitute_dict[e[::-1]]= []
         # step 1
         quasi_cuts = set()  # set Q in original paper
         # TODO: ensure lexographical order with respect to w, v
@@ -246,20 +247,24 @@ class Yamada(object):
             weight = tree.get_edge_data(*node_edge)['weight']
 
             if node_edge not in fixed_edges:
-                while substitute_dict[node_edge] is None and len(quasi_cuts) > 0:
-                    print(quasi_cuts)
-                    # step 2.2.a
-                    cut_edge = self.equal_weight_descendant((weight, *node_edge),
+                # step 2.2.a
+                cut_edge = self.equal_weight_descendant((weight, *node_edge),
                                     quasi_cuts, postorder_dict, descendant_dict)
+
+                while cut_edge is not None and cut_edge not in substitute_dict[node_edge]:
+                    print(quasi_cuts)
                     # step 2.2.b
-                    if cut_edge is not None:
-                        if postorder_dict[cut_edge[2]] in descendant_dict[node]:
-                            quasi_cuts.remove(cut_edge)
-                        # step 2.2.c
-                        else:
-                            substitute_dict[node_edge] = cut_edge[1:]
+                    if postorder_dict[cut_edge[2]] in descendant_dict[node]:
+                        quasi_cuts.remove(cut_edge)
+                        # back to step 2.2.a
+                        cut_edge = self.equal_weight_descendant((weight, *node_edge),
+                                    quasi_cuts, postorder_dict, descendant_dict)
+                    # step 2.2.c
                     else:
-                        break
+                        substitute_dict[node_edge].append(cut_edge[1:])
+                        substitute_dict[node_edge[::-1]].append(cut_edge[1:])
+                        cut_edge = None
+
             # edge_exists(node, quasi_cuts):
         return(substitute_dict)
     
