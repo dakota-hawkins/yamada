@@ -251,7 +251,7 @@ class Yamada(object):
                 cut_edge = self.equal_weight_descendant((weight, *node_edge),
                                     quasi_cuts, postorder_dict, descendant_dict)
 
-                while cut_edge is not None and cut_edge not in substitute_dict[node_edge]:
+                while cut_edge is not None:
                     print(quasi_cuts)
                     # step 2.2.b
                     if postorder_dict[cut_edge[2]] in descendant_dict[node]:
