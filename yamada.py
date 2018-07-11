@@ -1,8 +1,7 @@
 import networkx as nx
 from collections import OrderedDict
-import numpy as np
-from matplotlib import pyplot as plt
 from sortedcontainers import SortedSet
+from numpy import random
 
 example = {1: {2: {'weight': 2},
                3: {'weight': 1}},
@@ -24,51 +23,6 @@ example = {1: {2: {'weight': 2},
                5: {'weight': 3}}}
 graph = nx.Graph(example)
 
-sub_example = {1: {2: {'weight': 3},
-                   3: {'weight': 12},
-                  10: {'weight': 12}},
-               2: {1: {'weight': 3},
-                   8: {'weight': 12},
-                   10: {'weight': 12}},
-               3: {1: {'weight': 12},
-                   4: {'weight': 7},
-                   5: {'weight': 10},
-                   6: {'weight': 10}},
-               4: {3: {'weight': 7},
-                   7: {'weight': 1},
-                   10: {'weight': 10}},
-               5: {3: {'weight': 10},
-                   6: {'weight': 3},
-                   7: {'weight': 13},
-                   8: {'weight': 10}},
-               6: {3: {'weight': 10},
-                   5: {'weight': 3},
-                   7: {'weight': 10}},
-               7: {4: {'weight': 1},
-                   5: {'weight': 13},
-                   6: {'weight': 10},
-                   9: {'weight': 10}},
-               8: {2: {'weight': 12},
-                   9: {'weight': 6},
-                   5: {'weight': 10}},
-               9: {7: {'weight': 10},
-                   8: {'weight': 6},
-                   10: {'weight': 7}},
-               10: {1: {'weight': 12},
-                    2: {'weight': 12},
-                    4: {'weight': 10},
-                    9: {'weight': 7}}}
-sub_tree_example = {1: {2: {'weight': 3}},
-                    2: {10: {'weight': 12}},
-                    10: {9: {'weight': 7}},
-                    9: {8: {'weight': 6},
-                        7: {'weight': 10}},
-                    7: {4: {'weight': 1},
-                        6: {'weight': 10}},
-                    4: {3: {'weight': 7}},
-                    6: {5: {'weight': 3}}}
-sub_graph = nx.Graph(sub_example)
-sub_tree = nx.Graph(sub_tree_example)
 # TODO: Same source node for postordering, necessary?
 
 
@@ -114,7 +68,7 @@ def check_input_graph(graph):
     """
     if not nx.is_connected(graph):
         raise ValueError("Input graph must be a connected.")
-    if not has_self_cycles(graph):
+    if has_self_cycles(graph):
         raise ValueError("Input graph must have no self-cycles.")
     if not is_weighted(graph):
         raise ValueError("Input graph must have weighted edges.")
@@ -246,8 +200,8 @@ class Substitute(object):
             (int): randomly selected node from `self.graph`.
         """
         if seed is not None:
-            np.random.seed(seed)
-        r_idx = np.random.randint(0, high=self.graph.number_of_nodes())
+            random.seed(seed)
+        r_idx = random.randint(0, high=self.graph.number_of_nodes())
         return(list(self.graph.nodes)[r_idx])
 
     def find_incident_edges(self, node):
