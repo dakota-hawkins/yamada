@@ -105,11 +105,11 @@ def check_input_tree(tree, parent_graph):
 
 class Yamada(object):
 
-    def __init__(self, graph):
+    def __init__(self, graph, n_trees=inf):
         self.instantiate_graph(graph)
         self.trees = []  # minimum spanning trees of graph
-        self.restricted_edges = set()  # set R as defined in Yamada et al. 2010
-        self.fixed_edges = set()  # set F as defined in Yamada et al. 2010
+        self.n_trees = n_trees
+    
 
     def instantiate_graph(self, graph):
         """Ensure graph has no self-cycles, is weighted, and connected."""
@@ -140,7 +140,7 @@ class Yamada(object):
             return(False)
         return(True)
 
-    def replace_edge(tree, old_edge, new_edge):
+    def replace_edge(self, tree, old_edge, new_edge):
         """
         Replace an edge in a tree with a substitute edge.
 
@@ -149,25 +149,99 @@ class Yamada(object):
             old_edge (tuple (int, int)): edge in `tree` to be replaced.
             new_edge (tuple (int, int)): substitute edge for `old_edge` that
                 creates a new minimum spanning tree.
+            weight (float): weight of replacement edge.
         Returns:
             (nx.Graph): new minimum spanning tree following edge replacement.
         """
+        if new_edge in self.graph.edges():
+            tree.remove_edge(*old_edge)
+            weight = self.graph[new_edge[0]][new_edge[1]]['weight']
+            tree.add_edge(*new_edge, weight=weight)
+        else:
+            raise ValueError("{} is not contained in parent graph"\
+                             .format(new_edge))
+        return tree
 
-    def all_mst(n_trees=inf):
+    def spanning_trees(self):
         """
-        Find all minimum spanning trees.
+        Find all minimum spanning trees contained in `self.graph`
 
-        Args:
-            n_trees (int, optional): maximum number of minimum spanning trees to
-                find. Default is infinity, and an exhaustive search will be
-                performed.
+        Returns:
+            (list, nx.Graph): list of all discovered minimum spanning trees. 
         """
         tree = nx.minimum_spanning_tree(self.graph)
         self.trees.append(tree)
-        substitute = Substitute(self.graph, tree, self.fixed_edges,
-                                self.restricted_edges)
-        sub_edges = substitute.substitute()
+        mst_edge_sets = self.new_spanning_trees(tree, set(), set())
+        while len(mst_edge_sets) > 0 and len(self.trees) < self.n_trees:
+            # container for generated edge sets
+            new_edge_sets = []
+            i = 0
+            for each in mst_edge_sets:
+                # ensure number of trees does not exceed threshold
+                if len(self.trees) < self.n_trees:
+                    # generate new spanning trees and their associated edge sets
+                    print(i, each)
+                    edge_set = self.new_spanning_trees(each['tree'],
+                                                       each['fixed'],
+                                                       each['restricted'])
+                    # append every newly discovered tree
+                    for every in edge_set:
+                        new_edge_sets.append(every)
+                    i += 1
+            # re-assign edge sets for looping
+            mst_edge_sets = new_edge_sets
 
+        return self.trees
+        
+    def new_spanning_trees(self, tree, fixed_edges, restricted_edges):
+        """
+        All_MST2 algorithm from Yamada et al. 2010 to find all minimum spanning
+        trees.
+
+        The algorithm is modified for a breadth-first search in lieu of a depth
+        first search. This difference is motivated by the possibility of capping
+        the number of spanning trees returned. It was reasoned a capped
+        depth-first search could return less variable tree structures.
+        Therefore, a breadth-first approach was preferred.
+
+        Args:
+            tree (nx.Graph): current minimum spanning tree for `self.graph`. 
+            fixed_edges (set): set of fixed edges as defined in Yamada et al.
+                2010.
+            restricted_edges (set): set of restricted edges as defined in
+                Yamada 2010.
+        Returns:
+            (list, dict): list of dictionaries containing newly discovered
+                minimum spanning trees and their associated fixed and
+                restricted edge sets. Dictionary keys are 'tree', 'fixed', and
+                'restricted', respectively.
+        """
+        # find substitute edges -> step 1 in All_MST2 from Yamada et al. 2010
+        step_1 = Substitute(self.graph, tree, fixed_edges, restricted_edges)
+        s_edges = step_1.substitute()
+        edge_sets = []
+        if s_edges is not None:
+            for i, edge in enumerate(s_edges):
+                if s_edges[edge] is not None:
+                    # create new minimum spanning tree with substitute edge
+                    new_edge = s_edges[edge]
+                    tree_i = self.replace_edge(tree, edge, new_edge)
+
+                    # add new tree to list of minimum spanning trees
+                    self.trees.append(tree_i)
+
+                    # update F and R edge sets 
+                    fixed_i = fixed_edges.union(list(s_edges.keys())[0:i])
+                    restricted_i = restricted_edges.union([edge])
+                    edge_sets.append({'tree': tree_i,
+                                      'fixed': fixed_i,
+                                      'restricted': restricted_i})
+                    
+                    # break tree generation if the number of MSTs exceeds limit
+                    if len(self.trees) == self.n_trees:
+                        break
+
+        return edge_sets
 
 class Substitute(object):
     """
@@ -343,7 +417,7 @@ class Substitute(object):
         """
         substitute_dict = OrderedDict()
         for e in ordered_edges:
-            substitute_dict[e[1:]] = []
+            substitute_dict[e[1:]] = None
         return substitute_dict
         
 
@@ -404,7 +478,7 @@ class Substitute(object):
                             substitute_dict = self._create_substitute_dict(
                                                                   ordered_edges)
 
-                        substitute_dict[n_edge[1:]].append(cut_edge[1:])
+                        substitute_dict[n_edge[1:]] = cut_edge[1:]
                         cut_edge = None
 
         return(substitute_dict)
