@@ -62,18 +62,26 @@ class SubstituteTest(unittest.TestCase):
         self.tree = nx.Graph(sub_tree_example)
 
     def test_substitute_edges(self):
-        sub = yamada.Substitute(graph=self.graph, tree=self.tree, fixed_edges=set(),
-                                restricted_edges=set(), ordered=True)
+        sub = yamada.Substitute(graph=self.graph, tree=self.tree,
+                                fixed_edges=set(), restricted_edges=set(),
+                                ordered=True)
         sub_edges = sub.substitute()
-        self.assertTrue(sub_edges[(1, 2)] == [])
-        self.assertTrue(sub_edges[(2, 10)] == [(1, 3)])
-        self.assertTrue(sub_edges[(3, 4)] == [])
-        self.assertTrue(sub_edges[(4, 7)] == [])
-        self.assertTrue(sub_edges[(5, 6)] == [])
-        self.assertTrue(sub_edges[(6, 7)] == [(5, 3)])
-        self.assertTrue(sub_edges[(7, 9)] == [(4, 10)])
-        self.assertTrue(sub_edges[(8, 9)] == [])
-        self.assertTrue(sub_edges[(9, 10)] == [])
+        self.assertTrue(sub_edges[(1, 2)] is None)
+        self.assertTrue(sub_edges[(2, 10)] == (1, 3))
+        self.assertTrue(sub_edges[(3, 4)] is None)
+        self.assertTrue(sub_edges[(4, 7)] is None)
+        self.assertTrue(sub_edges[(5, 6)] is None)
+        self.assertTrue(sub_edges[(6, 7)] == (5, 3))
+        self.assertTrue(sub_edges[(7, 9)] == (4, 10))
+        self.assertTrue(sub_edges[(8, 9)] is None)
+        self.assertTrue(sub_edges[(9, 10)] is None)
+
+    def test_no_substitute_edges(self):
+        sub = yamada.Substitute(graph=self.tree, tree=self.tree,
+                                fixed_edges=set(), restricted_edges=set(),
+                                ordered=True)
+        sub_edges = sub.substitute()
+        self.assertTrue(sub_edges is None)
 
 
 if __name__ == "__main__":
