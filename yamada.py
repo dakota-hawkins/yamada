@@ -358,7 +358,7 @@ class Substitute(object):
         # step 1
         self.instantiate_substitute_variables()
         ordered_edges = self.postordered_edges()
-        substitute_dict = {e[1:]: [] for e in ordered_edges}
+        substitute_dict = None
         
         # step 2
         for n_edge in ordered_edges:
