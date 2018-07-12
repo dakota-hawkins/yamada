@@ -1,7 +1,7 @@
 import networkx as nx
 from collections import OrderedDict
 from sortedcontainers import SortedSet
-from numpy import random
+from numpy import random, inf
 
 example = {1: {2: {'weight': 2},
                3: {'weight': 1}},
@@ -107,6 +107,9 @@ class Yamada(object):
 
     def __init__(self, graph):
         self.instantiate_graph(graph)
+        self.trees = []  # minimum spanning trees of graph
+        self.restricted_edges = set()  # set R as defined in Yamada et al. 2010
+        self.fixed_edges = set()  # set F as defined in Yamada et al. 2010
 
     def instantiate_graph(self, graph):
         """Ensure graph has no self-cycles, is weighted, and connected."""
@@ -136,6 +139,34 @@ class Yamada(object):
         if len(set(restricted_edges).intersection(set(tree.edges))) != 0:
             return(False)
         return(True)
+
+    def replace_edge(tree, old_edge, new_edge):
+        """
+        Replace an edge in a tree with a substitute edge.
+
+        Args:
+            tree (nx.Graph): minumum spanning tree.
+            old_edge (tuple (int, int)): edge in `tree` to be replaced.
+            new_edge (tuple (int, int)): substitute edge for `old_edge` that
+                creates a new minimum spanning tree.
+        Returns:
+            (nx.Graph): new minimum spanning tree following edge replacement.
+        """
+
+    def all_mst(n_trees=inf):
+        """
+        Find all minimum spanning trees.
+
+        Args:
+            n_trees (int, optional): maximum number of minimum spanning trees to
+                find. Default is infinity, and an exhaustive search will be
+                performed.
+        """
+        tree = nx.minimum_spanning_tree(self.graph)
+        self.trees.append(tree)
+        substitute = Substitute(self.graph, tree, self.fixed_edges,
+                                self.restricted_edges)
+        sub_edges = substitute.substitute()
 
 
 class Substitute(object):
