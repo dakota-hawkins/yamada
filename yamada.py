@@ -332,6 +332,21 @@ class Substitute(object):
                 return(cut_edge)
         return(None)
 
+    def _create_substitute_dict(self, ordered_edges):
+        """
+        Create dictionary linking edges to their substitutes.
+
+        Args:
+            ordered_edges (list, tuple (u, v)): list of postordered edges.
+        Returns:
+            (OrderedDict): dictionary linking edges to their substitutes.
+        """
+        substitute_dict = OrderedDict()
+        for e in ordered_edges:
+            substitute_dict[e[1:]] = []
+        return substitute_dict
+        
+
     def substitute(self):
         """
         Finds all substitute edges for a minimum spanning tree.
@@ -385,6 +400,10 @@ class Substitute(object):
 
                     # step 2.2.c
                     else:
+                        if substitute_dict is None:
+                            substitute_dict = self._create_substitute_dict(
+                                                                  ordered_edges)
+
                         substitute_dict[n_edge[1:]].append(cut_edge[1:])
                         cut_edge = None
 
