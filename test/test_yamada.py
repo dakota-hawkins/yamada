@@ -11,6 +11,60 @@ from yamada import yamada
 import networkx as nx
 
 
+class YamadaTest(unittest.TestCase):
+
+    def setUp(self):
+        example = {1: {2: {'weight': 2},
+                       3: {'weight': 1}},
+                   2: {1: {'weight': 2},
+                       3: {'weight': 3},
+                       4: {'weight': 1}},
+                   3: {1: {'weight': 1},
+                       2: {'weight': 3},
+                       4: {'weight': 2},
+                       5: {'weight': 2}},
+                   4: {2: {'weight': 1},
+                       3: {'weight': 2},
+                       5: {'weight': 1},
+                       6: {'weight': 3}},
+                   5: {3: {'weight': 2},
+                       4: {'weight': 1},
+                       6: {'weight': 3}},
+                   6: {4: {'weight': 3},
+                       5: {'weight': 3}}}
+        graph = nx.Graph(example)
+        tree = {1: {2: {'weight': 2},
+                    3: {'weight': 1}},
+                2: {4: {'weight': 1}},
+                4: {5: {'weight': 1},
+                    6: {'weight': 3}}}
+        self.tree = nx.Graph(tree)
+        self.yamada = yamada.Yamada(graph)
+
+    def test_edge_replacement_presence(self):
+        tree = self.yamada.replace_edge(self.tree, (4, 5), (3, 5))
+        self.assertTrue((3, 5) in tree.edges)
+
+    def test_edge_replacement_presence(self):
+        tree = self.yamada.replace_edge(self.tree, (4, 5), (3, 5))
+        self.assertTrue(tree[3][5]['weight'] == 2)
+
+    def test_edge_replacement_removal(self):
+        tree = self.yamada.replace_edge(self.tree, (4, 5), (3, 5))
+        self.assertTrue((4, 5) not in tree.edges)
+
+    def test_edge_replacement_new_edge_set(self):
+        tree = self.yamada.replace_edge(self.tree, (4, 5), (3, 5))
+        new_tree_edge_set = set(tree.edges)
+        old_tree_edge_set = set(self.tree.edges) 
+        self.assertTrue(new_tree_edge_set.difference(old_tree_edge_set) == set((3, 5)))
+
+    def test_edge_replacement_old_edge_set(self):
+        tree = self.yamada.replace_edge(self.tree, (4, 5), (3, 5))
+        new_tree_edge_set = set(tree.edges)
+        old_tree_edge_set = set(self.tree.edges) 
+        self.assertTrue(old_tree_edge_set.difference(new_tree_edge_set) == set((4, 5)))
+
 class SubstituteTest(unittest.TestCase):
     """Test Substitute class in yamada.py"""
 
