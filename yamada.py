@@ -153,14 +153,15 @@ class Yamada(object):
         Returns:
             (nx.Graph): new minimum spanning tree following edge replacement.
         """
+        new_tree = tree.copy()
         if new_edge in self.graph.edges():
-            tree.remove_edge(*old_edge)
+            new_tree.remove_edge(*old_edge)
             weight = self.graph[new_edge[0]][new_edge[1]]['weight']
-            tree.add_edge(*new_edge, weight=weight)
+            new_tree.add_edge(*new_edge, weight=weight)
         else:
             raise ValueError("{} is not contained in parent graph"\
                              .format(new_edge))
-        return tree
+        return new_tree
 
     def spanning_trees(self):
         """
@@ -180,7 +181,6 @@ class Yamada(object):
                 # ensure number of trees does not exceed threshold
                 if len(self.trees) < self.n_trees:
                     # generate new spanning trees and their associated edge sets
-                    print(i, each)
                     edge_set = self.new_spanning_trees(each['tree'],
                                                        each['fixed'],
                                                        each['restricted'])
@@ -216,6 +216,7 @@ class Yamada(object):
                 restricted edge sets. Dictionary keys are 'tree', 'fixed', and
                 'restricted', respectively.
         """
+        # TODO: all output trees are identical. Stopping mechanism failing.
         # find substitute edges -> step 1 in All_MST2 from Yamada et al. 2010
         step_1 = Substitute(self.graph, tree, fixed_edges, restricted_edges)
         s_edges = step_1.substitute()
