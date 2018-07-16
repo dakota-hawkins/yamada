@@ -55,15 +55,15 @@ class YamadaTest(unittest.TestCase):
 
     def test_edge_replacement_new_edge_set(self):
         tree = self.yamada.replace_edge(self.tree, (4, 5), (3, 5))
-        new_tree_edge_set = set(tree.edges)
-        old_tree_edge_set = set(self.tree.edges) 
-        self.assertTrue(new_tree_edge_set.difference(old_tree_edge_set) == set((3, 5)))
+        new_edges = set(tree.edges)
+        old_edges = set(self.tree.edges) 
+        self.assertTrue(new_edges.difference(old_edges) == set([(3, 5)]))
 
     def test_edge_replacement_old_edge_set(self):
         tree = self.yamada.replace_edge(self.tree, (4, 5), (3, 5))
-        new_tree_edge_set = set(tree.edges)
-        old_tree_edge_set = set(self.tree.edges) 
-        self.assertTrue(old_tree_edge_set.difference(new_tree_edge_set) == set((4, 5)))
+        new_edges = set(tree.edges)
+        old_edges = set(self.tree.edges) 
+        self.assertTrue(old_edges.difference(new_edges) == set([(4, 5)]))
 
 class SubstituteTest(unittest.TestCase):
     """Test Substitute class in yamada.py"""
