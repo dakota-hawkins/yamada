@@ -1,7 +1,7 @@
 # yamada
 Python implementation of the Yamada-Kataoka-Watanabe algorithm to find all minimum spanning trees in an undirected graph.
 
-Implementation follows the steps for the `ALL_MST2` algorithm outlined in the original paper.
+Implementation mostly follows the `ALL_MST2` algorithm outlined in the original paper. The implementation differs slightly by performing a breadth-first search in liue of a depth-first search. This modification was made so that more variable spanning trees were returned when capping the total number of trees returned.
 
 **Original Paper**
 
