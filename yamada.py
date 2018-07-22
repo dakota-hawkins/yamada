@@ -3,26 +3,6 @@ from collections import OrderedDict
 from sortedcontainers import SortedSet
 from numpy import random, inf, argmin, argmax
 
-example = {1: {2: {'weight': 2},
-               3: {'weight': 1}},
-           2: {1: {'weight': 2},
-               3: {'weight': 3},
-               4: {'weight': 1}},
-           3: {1: {'weight': 1},
-               2: {'weight': 3},
-               4: {'weight': 2},
-               5: {'weight': 2}},
-           4: {2: {'weight': 1},
-               3: {'weight': 2},
-               5: {'weight': 1},
-               6: {'weight': 3}},
-           5: {3: {'weight': 2},
-               4: {'weight': 1},
-               6: {'weight': 3}},
-           6: {4: {'weight': 3},
-               5: {'weight': 3}}}
-graph = nx.Graph(example)
-
 # TODO: Move helpers to static Yamada methods
 def is_weighted(graph):
     """
@@ -107,17 +87,6 @@ class Yamada(object):
         self.instantiate_graph(graph)
         self.trees = []  # minimum spanning trees of graph
         self.n_trees = n_trees
-    
-    # @staticmethod
-    # def relabel_to_postorder(graph):
-    #     """Relable nodes to postordered integer index"""
-    #     directed = graph.to_directed()
-    #     postordered_nodes = nx.dfs_postorder_nodes(directed)
-    #     mapping = {}
-    #     for i, n in enumerate(postordered_nodes):
-    #         mapping[n] = i + 1
-
-    #     return(nx.relabel_nodes(graph, mapping), mapping)
         
     def instantiate_graph(self, graph):
         """Instantiate graph to fit Algorithm requirements.
@@ -233,21 +202,10 @@ class Yamada(object):
                 restricted edge sets. Dictionary keys are 'tree', 'fixed', and
                 'restricted', respectively.
         """
-        # TODO: all output trees are identical. Stopping mechanism failing.
         # find substitute edges -> step 1 in All_MST2 from Yamada et al. 2010
-        print('\n\n')
-        print('tree: ')
-        print(tree.edges)
-        print('restricted: ')
-        print(restricted_edges)
-        print('fixed: ')
-        print(fixed_edges)
-        print('substitute')
         step_1 = Substitute(self.graph, tree, fixed_edges, restricted_edges)
         s_edges = step_1.substitute()
-        print(s_edges)
         edge_sets = []
-        print('new trees')
         if s_edges is not None:
             for i, edge in enumerate(s_edges):
                 if s_edges[edge] is not None:
@@ -320,21 +278,23 @@ class Substitute(object):
         self.directed = self.tree.to_directed()  # directed graph for postorder
         self.postorder_nodes, self.descendants = self.postorder_tree()
         # set Q in original paper
-        self.quasi_cuts = SortedSet(key=lambda x: (x[0], x[1], x[2])) 
+        self.quasi_cuts = SortedSet(key=lambda x: (x[0], x[1], x[2]))
 
-    def random_node(self, seed=None):
+    @staticmethod
+    def check_edge_set_membership(edge, edge_set):
         """
-        Select random node from graph.
-        
+        Check whether an edge is in a set of edges.
+
+        Check whether an edge tuple (u, v) is in a set of edges by checking
+        both forward and reverse directions.
+
         Args:
-            seed (int, optional): random seed to use. Default is None. 
-        Returns:
-            (int): randomly selected node from `self.graph`.
+            edge (tuple): tuple representing an edge between nodes `u` and node
+                `v`. Formatted `(u, v)`.
+            edge_set (set, tuple): set of edge tuples.
         """
-        if seed is not None:
-            random.seed(seed)
-        r_idx = random.randint(0, high=self.graph.number_of_nodes())
-        return(list(self.graph.nodes)[r_idx])
+        return edge in edge_set or edge[::-1] in edge_set
+
 
     def find_incident_edges(self, node):
         """
@@ -351,8 +311,8 @@ class Substitute(object):
         incident_set = set()
         for neighbor in nx.neighbors(self.graph, node):
             edge = (node, neighbor)
-            restricted = edge in self.restricted_edges or\
-                         edge[::-1] in self.restricted_edges
+            restricted = self.check_edge_set_membership(edge,
+                                                        self.restricted_edges)
             if not restricted and edge not in self.tree.edges():
                 w_edge = (self.graph.get_edge_data(*edge)['weight'], *edge)
                 incident_set.add(w_edge)
@@ -495,7 +455,7 @@ class Substitute(object):
                     self.quasi_cuts.add(i_edge)
             
             # step 2.2
-            if n_edge[1:3] not in self.fixed_edges:
+            if not self.check_edge_set_membership(n_edge[1:3], self.fixed_edges):
 
                 # step 2.2.a
                 cut_edge = self.equal_weight_descendant(n_edge)
