@@ -5,8 +5,23 @@ Implementation mostly follows the `ALL_MST2` algorithm outlined in the original 
 
 [**Original Paper**](http://www.nda.ac.jp/~yamada/paper/enum-mst.pdf)
 
- Yamada, T. Kataoka, S. Watanabe, K. "Listing all the minimum spanning trees in an undirected graph". *International Journal of Computer Mathematics*. Vol 87, No. 14. pp. 3175 - 3185. November 2010.
+Yamada, T. Kataoka, S. Watanabe, K. "Listing all the minimum spanning trees in an undirected graph". *International Journal of Computer Mathematics*. Vol 87, No. 14. pp. 3175 - 3185. November 2010.
  
+ ## Installation
+This module is not currently hosted through popular package managing tools such as `pip` or `conda`. Therefore, simply cloning, downloading, or forking this repository is the best way to install the package. To ensure global access to the module, you'll want to add the repository location to your `PYTHONPATH`.
+ 
+ ## Tests
+ Proper implementation was tested using the examples found in the original paper, and implementation of those tests can be found in the `test` subdirectory. The graph structure used in Figure 3 of the original paper, is used to explicitly test for exact minimum spanning tree membership. Meanwhile, the unit-weight, complete graphs k<sub>i<sub/> are tested for unique membership and expected length for i in {3, 4, 5, 6}. The `Substitute()` algorithm is tested using the example found in table 3 of the original paper.
+ 
+ To run the tests simply execute the following command:
+ 
+ ```
+ python tests/test_yamada.py
+ ```
+ 
+ ## Dependencies
+ 
+ This module depends on the `numpy`, `networkx`, `collections`, `sortedcontainers`, `sys`, and `unittest` packages, and was written in Python 3.6. The exact requirements can be found in the `requirements.txt` file.
  
  ## Example
  ```Python
