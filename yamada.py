@@ -1,7 +1,7 @@
 import networkx as nx
 from collections import OrderedDict
 from sortedcontainers import SortedSet
-from numpy import random, inf
+from numpy import random, inf, argmin, argmax
 
 example = {1: {2: {'weight': 2},
                3: {'weight': 1}},
@@ -23,9 +23,7 @@ example = {1: {2: {'weight': 2},
                5: {'weight': 3}}}
 graph = nx.Graph(example)
 
-# TODO: Same source node for postordering, necessary?
-
-
+# TODO: Move helpers to static Yamada methods
 def is_weighted(graph):
     """
     Determine if graph has a 'weight' attribute.
@@ -110,10 +108,30 @@ class Yamada(object):
         self.trees = []  # minimum spanning trees of graph
         self.n_trees = n_trees
     
+    # @staticmethod
+    # def relabel_to_postorder(graph):
+    #     """Relable nodes to postordered integer index"""
+    #     directed = graph.to_directed()
+    #     postordered_nodes = nx.dfs_postorder_nodes(directed)
+    #     mapping = {}
+    #     for i, n in enumerate(postordered_nodes):
+    #         mapping[n] = i + 1
 
+    #     return(nx.relabel_nodes(graph, mapping), mapping)
+        
     def instantiate_graph(self, graph):
-        """Ensure graph has no self-cycles, is weighted, and connected."""
+        """Instantiate graph to fit Algorithm requirements.
+        
+        Ensures graph has no self-cycles, is weighted, connected, and relabels
+        nodes to post-ordered positions.
+
+        Args:
+            graph (nx.Graph): graph to instantiate.
+        Returns:
+            (nx.Graph): relabeled graph.
+        """
         check_input_graph(graph)
+        # self.graph, self.mapping = self.relabel_to_postorder(graph)
         self.graph = graph
 
     def is_admissible(self, tree, fixed_edges, restricted_edges):
@@ -218,9 +236,19 @@ class Yamada(object):
         """
         # TODO: all output trees are identical. Stopping mechanism failing.
         # find substitute edges -> step 1 in All_MST2 from Yamada et al. 2010
+        print('\n\n')
+        print('tree: ')
+        print(tree.edges)
+        print('restricted: ')
+        print(restricted_edges)
+        print('fixed: ')
+        print(restricted_edges)
+        print('substitute')
         step_1 = Substitute(self.graph, tree, fixed_edges, restricted_edges)
         s_edges = step_1.substitute()
+        print(s_edges)
         edge_sets = []
+        print('new trees')
         if s_edges is not None:
             for i, edge in enumerate(s_edges):
                 if s_edges[edge] is not None:
@@ -254,7 +282,8 @@ class Substitute(object):
         fixed_edges (set): set of fixed edges as described in Yamata et al. 2010.
         restricted_edges (set): set of restricted edges as described in Yamata
             et al. 2010.
-        ordered (boolean): whether indices in `tree` are already postordered.
+        source_node (boolean): source node for post-ordered tree. Defaults to
+            last lexigraphically sorted node.
         postorder_nodes (dict, int:int): dictionary mapping original nodes to
             their postorder index. Instantiated during `substitute()` call.
         descendants (dict, int:list[int]): dictionary mapping nodes to their
@@ -267,8 +296,7 @@ class Substitute(object):
             `substitute()` call. 
     """
 
-    def __init__(self, graph, tree, fixed_edges, restricted_edges,
-                 ordered=False):
+    def __init__(self, graph, tree, fixed_edges, restricted_edges):
         """
         Substitute algorithm from Yamada et al. 2010.
 
@@ -279,7 +307,6 @@ class Substitute(object):
                 2010.
             restricted_edges (set): set of restricted edges as described in
                 Yamata et al. 2010.
-            ordered (boolean): whether indices in `tree` are already postordered.
         """
         check_input_graph(graph)
         self.graph = graph
@@ -287,7 +314,7 @@ class Substitute(object):
         self.tree = tree
         self.fixed_edges = fixed_edges
         self.restricted_edges = restricted_edges
-        self.ordered = ordered
+        self.source_node = list(graph.nodes)[-1]
 
     def instantiate_substitute_variables(self):
         """Instantiate variables for postordering nodes and quasi cuts."""
@@ -344,23 +371,21 @@ class Substitute(object):
                 in the graph to its postorder position. The second dictionary
                 serves as a look up for postorder descendants for each node.
         """
-        nodes = self.tree.nodes
-        if not self.ordered:
-            nodes = nx.dfs_postorder_nodes(self.directed, self.random_node())
-
+        nodes = nx.dfs_postorder_nodes(self.directed, self.source_node)
         postorder_nodes = OrderedDict()
 
-        # map nodes to their postorder position
+        # map nodes to their postorder position and remove child edges
+        child_edges = []
         for i, node in enumerate(nodes):
-        # for i, node in enumerate(list(self.graph.nodes())):
             postorder_nodes[node] = i + 1
             # remove directed edges not already logged in dictionary
             # --> higher postorder, won't be descendant
-            parent_nodes = []
             for neighbor in nx.neighbors(self.directed, node):
                 if neighbor not in postorder_nodes:
-                    parent_nodes.append((node, neighbor))
-            self.directed.remove_edges_from(parent_nodes)
+                    # neighbor has higher postorder, remove node -> neighbor
+                    # edge, but keep neighbor -> node edge
+                    child_edges.append((neighbor, node))
+        self.directed.remove_edges_from(child_edges)
 
         # map nodes to their postordered descendants
         descendants = {}
@@ -375,9 +400,19 @@ class Substitute(object):
     def postordered_edges(self):
         """Return postorded, weighted edges."""
         edges = []
-        for u, v in self.directed.edges():
+        for u, v in self.tree.edges():
+            # ensure edges are orders (u, v) such that u has the lowest
+            # postorder
+            n1_idx = argmin((self.postorder_nodes[u],
+                             self.postorder_nodes[v]))
+            n2_idx = argmax((self.postorder_nodes[u],
+                             self.postorder_nodes[v]))
+            (n1, n2) = (u, v)[n1_idx], (u, v)[n2_idx]
             w = self.graph.get_edge_data(*(u,v))['weight']
-            edges.append((w, v, u)) 
+            edges.append((w, n1, n2))
+
+        # order edge list by post order of first node, and then post order of
+        # second node
         edges = sorted(edges, key=lambda x: (self.postorder_nodes[x[1]],
                                              self.postorder_nodes[x[2]]))
         return edges
@@ -459,7 +494,7 @@ class Substitute(object):
                 if self.postorder_nodes[i_edge[2]] > self.descendants[i_edge[1]][-1]:
                     self.quasi_cuts.add(i_edge)
             
-            #step 2.2
+            # step 2.2
             if n_edge not in self.fixed_edges:
 
                 # step 2.2.a
