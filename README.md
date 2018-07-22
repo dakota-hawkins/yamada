@@ -10,7 +10,8 @@ Implementation mostly follows the `ALL_MST2` algorithm outlined in the original 
  
  ## Example
  ```Python
-import Yamada
+import yamada
+import networkx as nx
  
 example = {1: {2: {'weight': 2},
                3: {'weight': 1}},
