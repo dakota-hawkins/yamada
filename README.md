@@ -33,12 +33,12 @@ example = {1: {2: {'weight': 2},
 graph = nx.Graph(example)
 
 # retrieve all minimum spanning trees 
-graph_yamada = yamada.Yamada(self.graph)
+graph_yamada = yamada.Yamada(graph)
 all_msts = graph_yamada.spanning_trees()
 print(len(all_msts))
 
 # retrieve fixed number of minimum spanning trees
-graph_yamada = yamada.Yamada(self.graph, n_trees=3)
+graph_yamada = yamada.Yamada(graph, n_trees=3)
 msts = graph_yamada.spanning_trees()
 print(len(msts))
  ```
