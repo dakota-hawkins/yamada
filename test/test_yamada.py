@@ -15,16 +15,6 @@ import yamada
 
 
 # Helper functions
-def unique_undirected_edge(edge1, edge2):
-    """
-    Test whether two edges link to the same node assuming an undirected graph.
-    """
-    if edge1 == edge2:
-        return False
-    elif edge1 == edge2[::-1]:
-        return False
-    return True
-
 def unique_trees(msts):
     """
     Test whether a list of minimum spanning trees are unique.
@@ -38,9 +28,10 @@ def unique_trees(msts):
     for i, mst1 in enumerate(msts):
         for j, mst2 in enumerate(msts):
             if i != j:
-                for edge1, edge2 in zip(mst1.edges, mst2.edges):
-                    if not unique_undirected_edge(edge1, edge2):
-                        return False
+                mst1_edges = set(mst1.edges)
+                mst2_edges = set(mst2.edges)
+                if len(mst1_edges.difference(mst2_edges)) == 0:
+                    return False
     return True
 
 def instantiate_k_graph(k):
@@ -61,11 +52,30 @@ def instantiate_k_graph(k):
                 k_graph.add_edge(i, j, weight=1)
     return k_graph
 
+def tree_from_edge_list(edge_list, parent_graph):
+    """
+    Extract tree from a parent graph given a set of edges.
+
+    Args:
+        edge_list (list, tuple): list of edges where edges are tuples (u, v)
+            such that u and v are nodes in `parent_graph`.
+        parent_graph (nx.Graph): parent graph to extract edge data from.
+    Returns:
+        (nx.Graph): tree of provided nodes with data extracted from parent
+            graph. 
+    """
+    tree = nx.Graph()
+    tree.add_nodes_from(parent_graph.nodes)
+    for edge in edge_list:
+        weight = parent_graph[edge[0]][edge[1]]['weight']
+        tree.add_edge(*edge, weight=weight)
+
+    return tree
+
 #TODO: implement this I guess. 
 # class HelperTests(unittest.TestCase):
 
-
-class YamadaTest(unittest.TestCase):
+class YamadaHelperTest(unittest.TestCase):
 
     def setUp(self):
         example = {1: {2: {'weight': 2},
@@ -120,7 +130,7 @@ class YamadaTest(unittest.TestCase):
         self.assertTrue(old_edges.difference(new_edges) == set([(4, 5)]))
 
 
-class K3Test(unittest.TestCase):
+class YamadaK3Test(unittest.TestCase):
     """
     Test the minimum spanning trees returned from K3.
     
@@ -139,7 +149,7 @@ class K3Test(unittest.TestCase):
         self.assertTrue(unique_trees(self.msts))
 
 
-class K4Test(unittest.TestCase):
+class YamadaK4Test(unittest.TestCase):
     """
     Test the minimum spanning trees returned from K4.
     
@@ -157,43 +167,112 @@ class K4Test(unittest.TestCase):
     def test_unique_msts(self):
         self.assertTrue(unique_trees(self.msts))
 
-# Currently takes too long on broken implementation
-# class K5Test(unittest.TestCase):
-#     """
-#     Test the minimum spanning trees returned from K5.
+
+class YamadaK5Test(unittest.TestCase):
+    """
+    Test the minimum spanning trees returned from K5.
     
-#     K5 is a complete graph of three nodes with fixed weights, w(e_i) = 1.
-#     """
+    K5 is a complete graph of three nodes with fixed weights, w(e_i) = 1.
+    """
 
-#     def setUp(self):
-#         k5 = instantiate_k_graph(5)
-#         k5_yamada = yamada.Yamada(k5)
-#         self.msts = k5_yamada.spanning_trees()
+    def setUp(self):
+        k5 = instantiate_k_graph(5)
+        k5_yamada = yamada.Yamada(k5)
+        self.msts = k5_yamada.spanning_trees()
     
-#     def test_number_of_msts(self):
-#         self.assertTrue(len(self.msts) == 125)
+    def test_number_of_msts(self):
+        self.assertTrue(len(self.msts) == 125)
 
-#     def test_unique_msts(self):
-#         self.assertTrue(unique_trees(self.msts))
+    def test_unique_msts(self):
+        self.assertTrue(unique_trees(self.msts))
 
-# Takes too long on currently broken implementation
-# class K6Test(unittest.TestCase):
-#     """
-#     Test the minimum spanning trees returned from K5.
+class YamadaK6Test(unittest.TestCase):
+    """
+    Test the minimum spanning trees returned from K5.
     
-#     K5 is a complete graph of three nodes with fixed weights, w(e_i) = 1.
-#     """
+    K5 is a complete graph of three nodes with fixed weights, w(e_i) = 1.
+    """
 
-#     def setUp(self):
-#         k6 = instantiate_k_graph(6)
-#         k6_yamada = yamada.Yamada(k6)
-#         self.msts = k6_yamada.spanning_trees()
+    def setUp(self):
+        k6 = instantiate_k_graph(6)
+        k6_yamada = yamada.Yamada(k6)
+        self.msts = k6_yamada.spanning_trees()
     
-#     def test_number_of_msts(self):
-#         self.assertTrue(len(self.msts) == 1296)
+    def test_number_of_msts(self):
+        self.assertTrue(len(self.msts) == 1296)
 
-#     def test_unique_msts(self):
-#         self.assertTrue(unique_trees(self.msts))
+    def test_unique_msts(self):
+        self.assertTrue(unique_trees(self.msts))
+
+class YamadaKnownMstTest(unittest.TestCase):
+    """
+    Test discovered minimum spanning trees from Figure 3 in Yamada et al.
+    """
+
+    def setUp(self):
+        example = {1: {2: {'weight': 2},
+                       3: {'weight': 1}},
+                   2: {1: {'weight': 2},
+                       3: {'weight': 3},
+                       4: {'weight': 1}},
+                   3: {1: {'weight': 1},
+                       2: {'weight': 3},
+                       4: {'weight': 2},
+                       5: {'weight': 2}},
+                   4: {2: {'weight': 1},
+                       3: {'weight': 2},
+                       5: {'weight': 1},
+                       6: {'weight': 3}},
+                   5: {3: {'weight': 2},
+                       4: {'weight': 1},
+                       6: {'weight': 3}},
+                   6: {4: {'weight': 3},
+                       5: {'weight': 3}}}
+        self.graph = nx.Graph(example)
+        graph_yamada = yamada.Yamada(self.graph)
+        self.msts = graph_yamada.spanning_trees()
+    
+    def test_number_of_msts(self):
+        self.assertTrue(len(self.msts) == 6)
+
+    def test_mst_weights(self):
+        weight_test = []
+        for each in self.msts:
+            weights = sum([each[u][v]['weight'] for u, v in each.edges])
+            weight_test.append(weights == 8)
+        self.assertTrue(all(weight_test))
+
+    def test_mst1_membership(self):
+        mst1_edges = [(1, 2), (1, 3), (2, 4), (4, 5), (4, 6)]
+        mst1 = tree_from_edge_list(mst1_edges, self.graph)
+        # mst1 should be in discovered msts -> expect non-unique list of msts
+        # when mst1 is added
+        self.assertTrue(not unique_trees([mst1] + self.msts))
+
+    def test_mst2_membership(self):
+        mst2_edges = [(1, 3), (3, 4), (2, 4), (4, 5), (4, 6)]
+        mst2 = tree_from_edge_list(mst2_edges, self.graph)
+        self.assertTrue(not unique_trees([mst2] + self.msts))
+
+    def test_mst3_membership(self):
+        mst3_edges = [(1, 3), (1, 2), (2, 4), (4, 5), (5, 6)]
+        mst3 = tree_from_edge_list(mst3_edges, self.graph)
+        self.assertTrue(not unique_trees([mst3] + self.msts))
+
+    def test_mst4_membership(self):
+        mst4_edges = [(1, 3), (3, 5), (2, 4), (4, 5), (4, 6)]
+        mst4 = tree_from_edge_list(mst4_edges, self.graph)
+        self.assertTrue(not unique_trees([mst4] + self.msts))
+
+    def test_mst5_membership(self):
+        mst5_edges = [(1, 3), (3, 4), (2, 4), (4, 5), (5, 6)]
+        mst5 = tree_from_edge_list(mst5_edges, self.graph)
+        self.assertTrue(not unique_trees([mst5] + self.msts))
+
+    def test_mst6_membership(self):
+        mst6_edges = [(1, 3), (2, 4), (4, 5), (3, 5), (5, 6)]
+        mst6 = tree_from_edge_list(mst6_edges, self.graph)
+        self.assertTrue(not unique_trees([mst6] + self.msts))
 
 
 class SubstituteTest(unittest.TestCase):
