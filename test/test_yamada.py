@@ -274,6 +274,32 @@ class YamadaKnownMstTest(unittest.TestCase):
         mst6 = tree_from_edge_list(mst6_edges, self.graph)
         self.assertTrue(not unique_trees([mst6] + self.msts))
 
+class YamadaEarlyTerminationTest(unittest.TestCase):
+    """Test early termination in Yamada class."""
+
+    def test_k3_termination(self):
+        k3 = instantiate_k_graph(3)
+        k3_yamada = yamada.Yamada(k3, n_trees=1)
+        msts = k3_yamada.spanning_trees()
+        self.assertTrue(len(msts) == 1)
+
+    def test_k4_termination(self):
+        k4 = instantiate_k_graph(4)
+        k4_yamada = yamada.Yamada(k4, n_trees=9)
+        msts = k4_yamada.spanning_trees()
+        self.assertTrue(len(msts) == 9)
+    
+    def test_k5_termination(self):
+        k5 = instantiate_k_graph(5)
+        k5_yamada = yamada.Yamada(k5, 53)
+        msts = k5_yamada.spanning_trees()
+        self.assertTrue(len(msts) == 53)
+    
+    def test_k6_termination(self):
+        k6 = instantiate_k_graph(6)
+        k6_yamada = yamada.Yamada(k6, 312)
+        msts = k6_yamada.spanning_trees()
+        self.assertTrue(len(msts) == 312)
 
 class SubstituteTest(unittest.TestCase):
     """Test Substitute class in yamada.py"""

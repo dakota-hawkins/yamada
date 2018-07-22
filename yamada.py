@@ -3,7 +3,8 @@ from collections import OrderedDict
 from sortedcontainers import SortedSet
 from numpy import random, inf, argmin, argmax
 
-# TODO: Move helpers to static Yamada methods
+# methods to ensure proper graph structure for both Yamada and Substitute
+# classes
 def is_weighted(graph):
     """
     Determine if graph has a 'weight' attribute.
@@ -82,8 +83,36 @@ def check_input_tree(tree, parent_graph):
 
 
 class Yamada(object):
+    """
+    Method class to find all minimum spanning trees in a network graph.
+
+    Implementation of ALL_MST2 from Yamada et al. 2010
+
+    Original Paper:
+        Yamada, T. Kataoka, S. Watanabe, K.
+        "Listing all the minimum spanning trees in an undirected graph".
+        International Journal of Computer Mathematics. Vol 87, No. 14. pp.
+        3175 - 3185. November 2010.
+
+    Attributes:
+        graph (nx.Graph): graph to find all minimum spanning trees for.
+        trees (list, nx.Graph): list of discovered minimum spanning trees.
+        n_trees (int): maximum number of trees to return.
+    """
 
     def __init__(self, graph, n_trees=inf):
+        """
+        Method class to find all minimum spanning trees in a network graph.
+
+        Implementation of ALL_MST2 from Yamada et al. 2010
+
+        Args:
+            graph (nx.Graph): graph to find all minimum spanning trees for.
+                Graph is expected to be connected, weighted, with no
+                self-cycles.
+            n_trees (int): maximum number of trees to return. Algorithm will
+                terminate early once this number is met.
+        """
         self.instantiate_graph(graph)
         self.trees = []  # minimum spanning trees of graph
         self.n_trees = n_trees
@@ -100,32 +129,7 @@ class Yamada(object):
             (nx.Graph): relabeled graph.
         """
         check_input_graph(graph)
-        # self.graph, self.mapping = self.relabel_to_postorder(graph)
         self.graph = graph
-
-    def is_admissible(self, tree, fixed_edges, restricted_edges):
-        """
-        Test whether a spanning tree is FR-admissible.
-
-        As defined by Yamada et al., A spanning tree, T, is FR-admissible if
-        and only if all edges in F are in T, and R and T are disjoint.
-
-        Args:
-            tree (nx.Graph): minimum spanning tree.
-            fixed_edges(list-like): container of fixed edges.
-            restricted_edges(list-like): container of restricted edges.
-        Return:
-            (Boolean): whether `tree` is FR-admissible
-        """
-        # Test F is subset of T
-        for edge in fixed_edges:
-            if edge not in tree.edges:
-                return(False)
-
-        # Test T and R disjoint
-        if len(set(restricted_edges).intersection(set(tree.edges))) != 0:
-            return(False)
-        return(True)
 
     def replace_edge(self, tree, old_edge, new_edge):
         """
@@ -159,6 +163,8 @@ class Yamada(object):
         """
         tree = nx.minimum_spanning_tree(self.graph)
         self.trees.append(tree)
+        # if self.n_trees == 1:
+        #     return self.trees
         mst_edge_sets = self.new_spanning_trees(tree, set(), set())
         while len(mst_edge_sets) > 0 and len(self.trees) < self.n_trees:
             # container for generated edge sets
@@ -206,7 +212,7 @@ class Yamada(object):
         step_1 = Substitute(self.graph, tree, fixed_edges, restricted_edges)
         s_edges = step_1.substitute()
         edge_sets = []
-        if s_edges is not None:
+        if s_edges is not None and len(self.trees) < self.n_trees:
             for i, edge in enumerate(s_edges):
                 if s_edges[edge] is not None:
                     # create new minimum spanning tree with substitute edge
@@ -225,13 +231,19 @@ class Yamada(object):
                     
                     # break tree generation if the number of MSTs exceeds limit
                     if len(self.trees) == self.n_trees:
-                        break
+                        return edge_sets
 
         return edge_sets
 
 class Substitute(object):
     """
     Substitute algorithm from Yamada et al. 2010.
+    
+    Original Paper:
+        Yamada, T. Kataoka, S. Watanabe, K.
+        "Listing all the minimum spanning trees in an undirected graph".
+        International Journal of Computer Mathematics. Vol 87, No. 14. pp.
+        3175 - 3185. November 2010.
     
     Attributes:
         graph (nx.Graph): undirected graph.
@@ -272,9 +284,17 @@ class Substitute(object):
         self.fixed_edges = fixed_edges
         self.restricted_edges = restricted_edges
         self.source_node = list(graph.nodes)[-1]
+        self.instantiate_substitute_variables()  # step 1 in Substitute
 
     def instantiate_substitute_variables(self):
-        """Instantiate variables for postordering nodes and quasi cuts."""
+        """
+        Instantiate variables for postordering nodes and quasi cuts.
+
+        Represents `step 1` in `Substitute(F, R, T)` from original paper.
+
+        Instantiates directed, posterorder_nodes, descendants, and quasi_cuts
+        instance variables. 
+        """
         self.directed = self.tree.to_directed()  # directed graph for postorder
         self.postorder_nodes, self.descendants = self.postorder_tree()
         # set Q in original paper
@@ -294,7 +314,6 @@ class Substitute(object):
             edge_set (set, tuple): set of edge tuples.
         """
         return edge in edge_set or edge[::-1] in edge_set
-
 
     def find_incident_edges(self, node):
         """
@@ -417,7 +436,6 @@ class Substitute(object):
             substitute_dict[e[1:]] = None
         return substitute_dict
         
-
     def substitute(self):
         """
         Finds all substitute edges for a minimum spanning tree.
@@ -427,11 +445,10 @@ class Substitute(object):
                 to list of possible substitute edges. 
         """
         # step 1
-        self.instantiate_substitute_variables()
-        ordered_edges = self.postordered_edges()
         substitute_dict = None
         
         # step 2
+        ordered_edges = self.postordered_edges()
         for n_edge in ordered_edges:
             incident_edges = self.find_incident_edges(n_edge[1])
 
@@ -480,4 +497,3 @@ class Substitute(object):
 
         return(substitute_dict)
     
-
