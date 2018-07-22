@@ -248,8 +248,7 @@ class SubstituteTest(unittest.TestCase):
 
     def test_substitute_edges(self):
         sub = yamada.Substitute(graph=self.graph, tree=self.tree,
-                                fixed_edges=set(), restricted_edges=set(),
-                                ordered=True)
+                                fixed_edges=set(), restricted_edges=set())
         sub_edges = sub.substitute()
         self.assertTrue(sub_edges[(1, 2)] is None)
         self.assertTrue(sub_edges[(2, 10)] == (1, 3))
@@ -263,8 +262,7 @@ class SubstituteTest(unittest.TestCase):
 
     def test_no_substitute_edges(self):
         sub = yamada.Substitute(graph=self.tree, tree=self.tree,
-                                fixed_edges=set(), restricted_edges=set(),
-                                ordered=True)
+                                fixed_edges=set(), restricted_edges=set())
         sub_edges = sub.substitute()
         self.assertTrue(sub_edges is None)
 
