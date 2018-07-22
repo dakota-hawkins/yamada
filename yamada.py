@@ -194,7 +194,6 @@ class Yamada(object):
         while len(mst_edge_sets) > 0 and len(self.trees) < self.n_trees:
             # container for generated edge sets
             new_edge_sets = []
-            i = 0
             for each in mst_edge_sets:
                 # ensure number of trees does not exceed threshold
                 if len(self.trees) < self.n_trees:
@@ -205,7 +204,7 @@ class Yamada(object):
                     # append every newly discovered tree
                     for every in edge_set:
                         new_edge_sets.append(every)
-                    i += 1
+
             # re-assign edge sets for looping
             mst_edge_sets = new_edge_sets
 
@@ -242,7 +241,7 @@ class Yamada(object):
         print('restricted: ')
         print(restricted_edges)
         print('fixed: ')
-        print(restricted_edges)
+        print(fixed_edges)
         print('substitute')
         step_1 = Substitute(self.graph, tree, fixed_edges, restricted_edges)
         s_edges = step_1.substitute()
@@ -352,7 +351,9 @@ class Substitute(object):
         incident_set = set()
         for neighbor in nx.neighbors(self.graph, node):
             edge = (node, neighbor)
-            if edge not in self.restricted_edges and edge not in self.tree.edges():
+            restricted = edge in self.restricted_edges or\
+                         edge[::-1] in self.restricted_edges
+            if not restricted and edge not in self.tree.edges():
                 w_edge = (self.graph.get_edge_data(*edge)['weight'], *edge)
                 incident_set.add(w_edge)
 
