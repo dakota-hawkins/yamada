@@ -384,7 +384,7 @@ class Substitute(object):
                 if neighbor not in postorder_nodes:
                     # neighbor has higher postorder, remove node -> neighbor
                     # edge, but keep neighbor -> node edge
-                    child_edges.append((neighbor, node))
+                    child_edges.append((node, neighbor))
         self.directed.remove_edges_from(child_edges)
 
         # map nodes to their postordered descendants
@@ -472,8 +472,7 @@ class Substitute(object):
         
         # step 2
         for n_edge in ordered_edges:
-            node = n_edge[1]
-            incident_edges = self.find_incident_edges(node)
+            incident_edges = self.find_incident_edges(n_edge[1])
 
             # step 2.1
             for i_edge in incident_edges:
@@ -495,14 +494,15 @@ class Substitute(object):
                     self.quasi_cuts.add(i_edge)
             
             # step 2.2
-            if n_edge not in self.fixed_edges:
+            if n_edge[1:3] not in self.fixed_edges:
 
                 # step 2.2.a
                 cut_edge = self.equal_weight_descendant(n_edge)
                 while cut_edge is not None:
                     
                     # step 2.2.b
-                    if self.postorder_nodes[cut_edge[2]] in self.descendants[node]:
+                    if self.postorder_nodes[cut_edge[2]] in\
+                    self.descendants[n_edge[1]]:
                         self.quasi_cuts.remove(cut_edge)
 
                         # back to step 2.2.a
