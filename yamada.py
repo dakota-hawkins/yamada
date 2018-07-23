@@ -1,7 +1,7 @@
 import networkx as nx
 from collections import OrderedDict
 from sortedcontainers import SortedSet
-from numpy import random, inf, argmin, argmax
+import numpy as np
 
 # methods to ensure proper graph structure for both Yamada and Substitute
 # classes
@@ -100,7 +100,7 @@ class Yamada(object):
         n_trees (int): maximum number of trees to return.
     """
 
-    def __init__(self, graph, n_trees=inf):
+    def __init__(self, graph, n_trees=np.inf):
         """
         Method class to find all minimum spanning trees in a network graph.
 
@@ -340,11 +340,12 @@ class Substitute(object):
 
     def postorder_tree(self):
         """
-        Invoke postorder ordering on all nodes and edges within the tree given a
-        random source node.
+        Invoke postorder ordering on all nodes and edges within the tree given 
+        a source node.
 
         Reorders a tree in a postorder fashion to retrieve descendants and order
-        mappings for all nodes within a tree.
+        mappings for all nodes within a tree. Source node is defined by
+        self.source_node and defaults to the lexigraphically last node. 
 
         Returns:
             (dict, dict): tuple of dictionaries. First dictionary maps each node
@@ -383,10 +384,10 @@ class Substitute(object):
         for u, v in self.tree.edges():
             # ensure edges are orders (u, v) such that u has the lowest
             # postorder
-            n1_idx = argmin((self.postorder_nodes[u],
-                             self.postorder_nodes[v]))
-            n2_idx = argmax((self.postorder_nodes[u],
-                             self.postorder_nodes[v]))
+            n1_idx = np.argmin((self.postorder_nodes[u],
+                                self.postorder_nodes[v]))
+            n2_idx = np.argmax((self.postorder_nodes[u],
+                                self.postorder_nodes[v]))
             (n1, n2) = (u, v)[n1_idx], (u, v)[n2_idx]
             w = self.graph.get_edge_data(*(u,v))['weight']
             edges.append((w, n1, n2))
