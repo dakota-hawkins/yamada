@@ -10,7 +10,8 @@ import unittest  # unit tests
 import networkx as nx  # graph module
 
 import sys  # get to yamada module
-sys.path.insert(0, '../')
+
+sys.path.insert(0, "../")
 import yamada
 
 
@@ -34,6 +35,7 @@ def unique_trees(msts):
                     return False
     return True
 
+
 def instantiate_k_graph(k):
     """
     Instantiate a unit-weight, complete, and undirected graph with `k` nodes.
@@ -52,6 +54,7 @@ def instantiate_k_graph(k):
                 k_graph.add_edge(i, j, weight=1)
     return k_graph
 
+
 def tree_from_edge_list(edge_list, parent_graph):
     """
     Extract tree from a parent graph given a set of edges.
@@ -62,46 +65,37 @@ def tree_from_edge_list(edge_list, parent_graph):
         parent_graph (nx.Graph): parent graph to extract edge data from.
     Returns:
         (nx.Graph): tree of provided nodes with data extracted from parent
-            graph. 
+            graph.
     """
     tree = nx.Graph()
     tree.add_nodes_from(parent_graph.nodes)
     for edge in edge_list:
-        weight = parent_graph[edge[0]][edge[1]]['weight']
+        weight = parent_graph[edge[0]][edge[1]]["weight"]
         tree.add_edge(*edge, weight=weight)
 
     return tree
 
-#TODO: implement this I guess. 
+
+# TODO: implement this I guess.
 # class HelperTests(unittest.TestCase):
 
-class YamadaHelperTest(unittest.TestCase):
 
+class YamadaHelperTest(unittest.TestCase):
     def setUp(self):
-        example = {1: {2: {'weight': 2},
-                       3: {'weight': 1}},
-                   2: {1: {'weight': 2},
-                       3: {'weight': 3},
-                       4: {'weight': 1}},
-                   3: {1: {'weight': 1},
-                       2: {'weight': 3},
-                       4: {'weight': 2},
-                       5: {'weight': 2}},
-                   4: {2: {'weight': 1},
-                       3: {'weight': 2},
-                       5: {'weight': 1},
-                       6: {'weight': 3}},
-                   5: {3: {'weight': 2},
-                       4: {'weight': 1},
-                       6: {'weight': 3}},
-                   6: {4: {'weight': 3},
-                       5: {'weight': 3}}}
+        example = {
+            1: {2: {"weight": 2}, 3: {"weight": 1}},
+            2: {1: {"weight": 2}, 3: {"weight": 3}, 4: {"weight": 1}},
+            3: {1: {"weight": 1}, 2: {"weight": 3}, 4: {"weight": 2}, 5: {"weight": 2}},
+            4: {2: {"weight": 1}, 3: {"weight": 2}, 5: {"weight": 1}, 6: {"weight": 3}},
+            5: {3: {"weight": 2}, 4: {"weight": 1}, 6: {"weight": 3}},
+            6: {4: {"weight": 3}, 5: {"weight": 3}},
+        }
         graph = nx.Graph(example)
-        tree = {1: {2: {'weight': 2},
-                    3: {'weight': 1}},
-                2: {4: {'weight': 1}},
-                4: {5: {'weight': 1},
-                    6: {'weight': 3}}}
+        tree = {
+            1: {2: {"weight": 2}, 3: {"weight": 1}},
+            2: {4: {"weight": 1}},
+            4: {5: {"weight": 1}, 6: {"weight": 3}},
+        }
         self.tree = nx.Graph(tree)
         self.yamada = yamada.Yamada(graph)
 
@@ -111,7 +105,7 @@ class YamadaHelperTest(unittest.TestCase):
 
     def test_edge_replacement_weight(self):
         tree = self.yamada.replace_edge(self.tree, (4, 5), (3, 5))
-        self.assertTrue(tree[3][5]['weight'] == 2)
+        self.assertTrue(tree[3][5]["weight"] == 2)
 
     def test_edge_replacement_removal(self):
         tree = self.yamada.replace_edge(self.tree, (4, 5), (3, 5))
@@ -120,20 +114,20 @@ class YamadaHelperTest(unittest.TestCase):
     def test_edge_replacement_new_edge_set(self):
         tree = self.yamada.replace_edge(self.tree, (4, 5), (3, 5))
         new_edges = set(tree.edges)
-        old_edges = set(self.tree.edges) 
+        old_edges = set(self.tree.edges)
         self.assertTrue(new_edges.difference(old_edges) == set([(3, 5)]))
 
     def test_edge_replacement_old_edge_set(self):
         tree = self.yamada.replace_edge(self.tree, (4, 5), (3, 5))
         new_edges = set(tree.edges)
-        old_edges = set(self.tree.edges) 
+        old_edges = set(self.tree.edges)
         self.assertTrue(old_edges.difference(new_edges) == set([(4, 5)]))
 
 
 class YamadaK3Test(unittest.TestCase):
     """
     Test the minimum spanning trees returned from K3.
-    
+
     K3 is a complete graph of three nodes with fixed weights, w(e_i) = 1.
     """
 
@@ -141,7 +135,7 @@ class YamadaK3Test(unittest.TestCase):
         k3 = instantiate_k_graph(3)
         k3_yamada = yamada.Yamada(k3)
         self.msts = k3_yamada.spanning_trees()
-    
+
     def test_number_of_msts(self):
         self.assertTrue(len(self.msts) == 3)
 
@@ -152,7 +146,7 @@ class YamadaK3Test(unittest.TestCase):
 class YamadaK4Test(unittest.TestCase):
     """
     Test the minimum spanning trees returned from K4.
-    
+
     K4 is a complete graph of three nodes with fixed weights, w(e_i) = 1.
     """
 
@@ -160,7 +154,7 @@ class YamadaK4Test(unittest.TestCase):
         k4 = instantiate_k_graph(4)
         k4_yamada = yamada.Yamada(k4)
         self.msts = k4_yamada.spanning_trees()
-    
+
     def test_number_of_msts(self):
         self.assertTrue(len(self.msts) == 16)
 
@@ -171,7 +165,7 @@ class YamadaK4Test(unittest.TestCase):
 class YamadaK5Test(unittest.TestCase):
     """
     Test the minimum spanning trees returned from K5.
-    
+
     K5 is a complete graph of three nodes with fixed weights, w(e_i) = 1.
     """
 
@@ -179,17 +173,18 @@ class YamadaK5Test(unittest.TestCase):
         k5 = instantiate_k_graph(5)
         k5_yamada = yamada.Yamada(k5)
         self.msts = k5_yamada.spanning_trees()
-    
+
     def test_number_of_msts(self):
         self.assertTrue(len(self.msts) == 125)
 
     def test_unique_msts(self):
         self.assertTrue(unique_trees(self.msts))
 
+
 class YamadaK6Test(unittest.TestCase):
     """
     Test the minimum spanning trees returned from K5.
-    
+
     K5 is a complete graph of three nodes with fixed weights, w(e_i) = 1.
     """
 
@@ -197,12 +192,13 @@ class YamadaK6Test(unittest.TestCase):
         k6 = instantiate_k_graph(6)
         k6_yamada = yamada.Yamada(k6)
         self.msts = k6_yamada.spanning_trees()
-    
+
     def test_number_of_msts(self):
         self.assertTrue(len(self.msts) == 1296)
 
     def test_unique_msts(self):
         self.assertTrue(unique_trees(self.msts))
+
 
 class YamadaKnownMstTest(unittest.TestCase):
     """
@@ -210,35 +206,25 @@ class YamadaKnownMstTest(unittest.TestCase):
     """
 
     def setUp(self):
-        example = {1: {2: {'weight': 2},
-                       3: {'weight': 1}},
-                   2: {1: {'weight': 2},
-                       3: {'weight': 3},
-                       4: {'weight': 1}},
-                   3: {1: {'weight': 1},
-                       2: {'weight': 3},
-                       4: {'weight': 2},
-                       5: {'weight': 2}},
-                   4: {2: {'weight': 1},
-                       3: {'weight': 2},
-                       5: {'weight': 1},
-                       6: {'weight': 3}},
-                   5: {3: {'weight': 2},
-                       4: {'weight': 1},
-                       6: {'weight': 3}},
-                   6: {4: {'weight': 3},
-                       5: {'weight': 3}}}
+        example = {
+            1: {2: {"weight": 2}, 3: {"weight": 1}},
+            2: {1: {"weight": 2}, 3: {"weight": 3}, 4: {"weight": 1}},
+            3: {1: {"weight": 1}, 2: {"weight": 3}, 4: {"weight": 2}, 5: {"weight": 2}},
+            4: {2: {"weight": 1}, 3: {"weight": 2}, 5: {"weight": 1}, 6: {"weight": 3}},
+            5: {3: {"weight": 2}, 4: {"weight": 1}, 6: {"weight": 3}},
+            6: {4: {"weight": 3}, 5: {"weight": 3}},
+        }
         self.graph = nx.Graph(example)
         graph_yamada = yamada.Yamada(self.graph)
         self.msts = graph_yamada.spanning_trees()
-    
+
     def test_number_of_msts(self):
         self.assertTrue(len(self.msts) == 6)
 
     def test_mst_weights(self):
         weight_test = []
         for each in self.msts:
-            weights = sum([each[u][v]['weight'] for u, v in each.edges])
+            weights = sum([each[u][v]["weight"] for u, v in each.edges])
             weight_test.append(weights == 8)
         self.assertTrue(all(weight_test))
 
@@ -274,6 +260,7 @@ class YamadaKnownMstTest(unittest.TestCase):
         mst6 = tree_from_edge_list(mst6_edges, self.graph)
         self.assertTrue(not unique_trees([mst6] + self.msts))
 
+
 class YamadaEarlyTerminationTest(unittest.TestCase):
     """Test early termination in Yamada class."""
 
@@ -288,72 +275,72 @@ class YamadaEarlyTerminationTest(unittest.TestCase):
         k4_yamada = yamada.Yamada(k4, n_trees=9)
         msts = k4_yamada.spanning_trees()
         self.assertTrue(len(msts) == 9)
-    
+
     def test_k5_termination(self):
         k5 = instantiate_k_graph(5)
         k5_yamada = yamada.Yamada(k5, 53)
         msts = k5_yamada.spanning_trees()
         self.assertTrue(len(msts) == 53)
-    
+
     def test_k6_termination(self):
         k6 = instantiate_k_graph(6)
         k6_yamada = yamada.Yamada(k6, 312)
         msts = k6_yamada.spanning_trees()
         self.assertTrue(len(msts) == 312)
 
+
 class SubstituteTest(unittest.TestCase):
     """Test Substitute class in yamada.py"""
 
     def setUp(self):
-        sub_example = {1: {2: {'weight': 3},
-                           3: {'weight': 12},
-                          10: {'weight': 12}},
-                       2: {1: {'weight': 3},
-                           8: {'weight': 12},
-                           10: {'weight': 12}},
-                       3: {1: {'weight': 12},
-                           4: {'weight': 7},
-                           5: {'weight': 10},
-                           6: {'weight': 10}},
-                       4: {3: {'weight': 7},
-                           7: {'weight': 1},
-                           10: {'weight': 10}},
-                       5: {3: {'weight': 10},
-                           6: {'weight': 3},
-                           7: {'weight': 13},
-                           8: {'weight': 10}},
-                       6: {3: {'weight': 10},
-                           5: {'weight': 3},
-                           7: {'weight': 10}},
-                       7: {4: {'weight': 1},
-                           5: {'weight': 13},
-                           6: {'weight': 10},
-                           9: {'weight': 10}},
-                       8: {2: {'weight': 12},
-                           9: {'weight': 6},
-                           5: {'weight': 10}},
-                       9: {7: {'weight': 10},
-                           8: {'weight': 6},
-                           10: {'weight': 7}},
-                       10: {1: {'weight': 12},
-                            2: {'weight': 12},
-                            4: {'weight': 10},
-                            9: {'weight': 7}}}
-        sub_tree_example = {1: {2: {'weight': 3}},
-                            2: {10: {'weight': 12}},
-                            10: {9: {'weight': 7}},
-                            9: {8: {'weight': 6},
-                                7: {'weight': 10}},
-                            7: {4: {'weight': 1},
-                                6: {'weight': 10}},
-                            4: {3: {'weight': 7}},
-                            6: {5: {'weight': 3}}}
+        sub_example = {
+            1: {2: {"weight": 3}, 3: {"weight": 12}, 10: {"weight": 12}},
+            2: {1: {"weight": 3}, 8: {"weight": 12}, 10: {"weight": 12}},
+            3: {
+                1: {"weight": 12},
+                4: {"weight": 7},
+                5: {"weight": 10},
+                6: {"weight": 10},
+            },
+            4: {3: {"weight": 7}, 7: {"weight": 1}, 10: {"weight": 10}},
+            5: {
+                3: {"weight": 10},
+                6: {"weight": 3},
+                7: {"weight": 13},
+                8: {"weight": 10},
+            },
+            6: {3: {"weight": 10}, 5: {"weight": 3}, 7: {"weight": 10}},
+            7: {
+                4: {"weight": 1},
+                5: {"weight": 13},
+                6: {"weight": 10},
+                9: {"weight": 10},
+            },
+            8: {2: {"weight": 12}, 9: {"weight": 6}, 5: {"weight": 10}},
+            9: {7: {"weight": 10}, 8: {"weight": 6}, 10: {"weight": 7}},
+            10: {
+                1: {"weight": 12},
+                2: {"weight": 12},
+                4: {"weight": 10},
+                9: {"weight": 7},
+            },
+        }
+        sub_tree_example = {
+            1: {2: {"weight": 3}},
+            2: {10: {"weight": 12}},
+            10: {9: {"weight": 7}},
+            9: {8: {"weight": 6}, 7: {"weight": 10}},
+            7: {4: {"weight": 1}, 6: {"weight": 10}},
+            4: {3: {"weight": 7}},
+            6: {5: {"weight": 3}},
+        }
         self.graph = nx.Graph(sub_example)
         self.tree = nx.Graph(sub_tree_example)
 
     def test_substitute_edges(self):
-        sub = yamada.Substitute(graph=self.graph, tree=self.tree,
-                                fixed_edges=set(), restricted_edges=set())
+        sub = yamada.Substitute(
+            graph=self.graph, tree=self.tree, fixed_edges=set(), restricted_edges=set()
+        )
         sub_edges = sub.substitute()
         self.assertTrue(sub_edges[(1, 2)] is None)
         self.assertTrue(sub_edges[(2, 10)] == (1, 3))
@@ -366,8 +353,9 @@ class SubstituteTest(unittest.TestCase):
         self.assertTrue(sub_edges[(9, 10)] is None)
 
     def test_no_substitute_edges(self):
-        sub = yamada.Substitute(graph=self.tree, tree=self.tree,
-                                fixed_edges=set(), restricted_edges=set())
+        sub = yamada.Substitute(
+            graph=self.tree, tree=self.tree, fixed_edges=set(), restricted_edges=set()
+        )
         sub_edges = sub.substitute()
         self.assertTrue(sub_edges is None)
 
